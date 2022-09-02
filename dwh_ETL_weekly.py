@@ -12,6 +12,7 @@ from configparser import ConfigParser
 from datetime import datetime
 
 
+
 def send_email(subject, to_addr, msg_txt, cfg, data_frame=None):
     """
     Отправить имэил с таблицей обменов
