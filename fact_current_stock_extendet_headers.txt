@@ -1,0 +1,15 @@
+Date
+TypeFact
+TypeStock
+Count
+AmountPurchasePriceEur
+AmountNetPriceEur
+TypePrice
+AmountBaseEur
+AmountBaseRub
+AmountBaseRubNotDiscount
+Rate
+DiscountStr
+GrID
+SdID
+WhID

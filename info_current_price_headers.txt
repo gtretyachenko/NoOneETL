@@ -1,0 +1,15 @@
+Date
+GrID
+NetPrice
+RetailEur
+RetailRub
+RetailRubNonDisount
+RetailDiscount
+StockEur
+StockRub
+StockRubNonDisount
+StockDiscount
+PopUpEur
+PopUpRub
+PopUpRubNonDisount
+PopUpDiscount

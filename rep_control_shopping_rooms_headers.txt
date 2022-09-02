@@ -1,0 +1,11 @@
+Date
+TypeOperation
+TypeMovement
+Based
+SalesManager
+Count
+CountStock
+GrID
+SdID
+WhID
+WorkHouseBackWhID

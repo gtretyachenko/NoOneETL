@@ -1,0 +1,16 @@
+PeriodStr
+Slice
+TypeFact
+DateStart
+TypeStock
+Count
+AmountEur
+AmountWithVAT
+TypePrice
+DiscountStr
+AmountBaseEur
+AmountBaseRub
+AmountBaseRubNotDiscount
+GrID
+SdID
+WhID
