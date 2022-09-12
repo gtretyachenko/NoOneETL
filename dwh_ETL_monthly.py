@@ -216,8 +216,8 @@ msg_txt = ''
 if connection:
     str_tables = ''
     names_table = [
-        #['fact_sales_plan_monthly', 'INS'],
-        ['relat_subdivisions_lfl', 'INS']
+        ['fact_sales_plan_monthly', 'INS'],
+        # ['relat_subdivisions_lfl', 'INS'] # - для ручной загрузки
     ]
     for twin in names_table:
         if twin[1] != 'skip':

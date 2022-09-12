@@ -7,4 +7,5 @@ DateLastSales
 DepthInOrder
 DepthInStockRetail
 DepthInStockWh
+DepthInStockAll
 CountTTStockRetail
