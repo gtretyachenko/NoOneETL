@@ -176,6 +176,10 @@ def load_data_to_dwh(conn, name_table, method, load_data=None):
     elif name_table == 'fact_retail_stock_by_days_weekly':
         if os.path.getmtime(f'C:/Общая/_DWH/_Facts_by_periods/Stock/{name_table}.csv') > dt_start_day:
             load_data = pd.read_csv(f'C:/Общая/_DWH/_Facts_by_periods/Stock/{name_table}.csv', header=None, skiprows=[0], sep=';', dtype=str)
+    elif name_table == 'fact_accum_division_of_seasons_by_tt_weekly':
+        if os.path.getmtime(f'C:/Общая/_DWH/_Facts_by_seasons/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'C:/Общая/_DWH/_Facts_by_seasons/{name_table}.csv', header=None, skiprows=[0],
+                                    sep=';', dtype=str)
 
     if isinstance(load_data, pd.DataFrame):
         val = prepare_load_data(load_data)
@@ -214,12 +218,13 @@ msg_txt = ''
 if connection:
     str_tables = ''
     names_table = [
-        # ['dim_products', 'REP'],
-        # ['dim_subdivisions', 'REP'],
+        # ['dim_products', 'REP'], # - продумать обновление без ошибок разделителя csv
+        # ['dim_subdivisions', 'REP'], # - продумать обновление без замены связей relat
         ['dim_warehouses', 'REP'],
         ['rep_le_silla_sales_from_movement', 'DEL-INS'],
         ['fact_retail_stock_by_days_weekly', 'DEL-INS'],
-        ['rep_waiting_goods_arrival_warehouse1', 'DEL-INS']
+        ['rep_waiting_goods_arrival_warehouse1', 'DEL-INS'],
+        ['fact_accum_division_of_seasons_by_tt_weekly', 'INS']
     ]
     for twin in names_table:
         if twin[1] != 'skip':

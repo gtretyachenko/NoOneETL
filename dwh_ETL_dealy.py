@@ -247,7 +247,8 @@ if connection:
        ['fact_current_stock_extendet', 'DEL-INS'],
        ['info_current_season_products', 'DEL-INS'],
        ['fact_current_accum_by_seasons', 'DEL-INS'],
-       ['fact_current_addition_retail_stock_extendet', 'DEL-INS']
+       ['fact_current_addition_retail_stock_extendet', 'DEL-INS'],
+
     ]
     for twin in names_table:
         if twin[1] != 'skip':

@@ -10,3 +10,5 @@ CountArrival
 GrID
 SdIDSender
 WhIDSender
+NumSheppingList
+IDSheppingList
