@@ -219,8 +219,8 @@ if connection:
     str_tables = ''
     names_table = [
         # ['dim_products', 'REP'], # - продумать обновление без ошибок разделителя csv
-        # ['dim_subdivisions', 'REP'], # - продумать обновление без замены связей relat
-        ['dim_warehouses', 'REP'],
+        # ['dim_subdivisions', 'REP'], # - продумать обновление без замены изменений (в т.ч. связей relat)
+        # ['dim_warehouses', 'REP'], # - продумать обновление без замены изменений
         ['rep_le_silla_sales_from_movement', 'DEL-INS'],
         ['fact_retail_stock_by_days_weekly', 'DEL-INS'],
         ['rep_waiting_goods_arrival_warehouse1', 'DEL-INS'],

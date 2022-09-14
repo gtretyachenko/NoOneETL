@@ -9,3 +9,4 @@ AmountBaseRub
 AmountBaseRubNotDiscount
 GrID
 WhID
+SdID
