@@ -201,6 +201,10 @@ def load_data_to_dwh(conn, name_table, method, load_data=None):
         if os.path.getmtime(f'C:/Общая/_DWH/_Facts_by_periods/Stock/{name_table}.csv') > dt_start_day:
             load_data = pd.read_csv(f'C:/Общая/_DWH/_Facts_by_periods/Stock/{name_table}.csv', header=None, skiprows=[0],
                                     sep=';', dtype=str)
+    elif name_table == 'fact_current_shepping_list_by_seasons':
+        if os.path.getmtime(f'C:/Общая/_DWH/_Facts_by_seasons/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'C:/Общая/_DWH/_Facts_by_seasons/{name_table}.csv', header=None, skiprows=[0],
+                                    sep=';', dtype=str)
 
     if isinstance(load_data, pd.DataFrame):
         val = prepare_load_data(load_data)
@@ -248,7 +252,8 @@ if connection:
        ['info_current_season_products', 'DEL-INS'],
        ['fact_current_accum_by_seasons', 'DEL-INS'],
        ['fact_current_addition_retail_stock_extendet', 'DEL-INS'],
-
+       ['rep_waiting_goods_arrival_warehouse1', 'DEL-INS'],
+       ['fact_current_shepping_list_by_seasons', 'DEL-INS']
     ]
     for twin in names_table:
         if twin[1] != 'skip':

@@ -3,13 +3,13 @@ GrID
 NetPrice
 RetailEur
 RetailRub
-RetailRubNonDisount
+RetailRubNonDiscount
 RetailDiscount
 StockEur
 StockRub
-StockRubNonDisount
+StockRubNonDiscount
 StockDiscount
 PopUpEur
 PopUpRub
-PopUpRubNonDisount
+PopUpRubNonDiscount
 PopUpDiscount

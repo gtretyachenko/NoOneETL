@@ -223,7 +223,6 @@ if connection:
         # ['dim_warehouses', 'REP'], # - продумать обновление без замены изменений
         ['rep_le_silla_sales_from_movement', 'DEL-INS'],
         ['fact_retail_stock_by_days_weekly', 'DEL-INS'],
-        ['rep_waiting_goods_arrival_warehouse1', 'DEL-INS'],
         ['fact_accum_division_of_seasons_by_tt_weekly', 'INS']
     ]
     for twin in names_table:
