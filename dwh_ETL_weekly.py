@@ -176,10 +176,6 @@ def load_data_to_dwh(conn, name_table, method, load_data=None):
     elif name_table == 'fact_retail_stock_by_days_weekly':
         if os.path.getmtime(f'C:/Общая/_DWH/_Facts_by_periods/Stock/{name_table}.csv') > dt_start_day:
             load_data = pd.read_csv(f'C:/Общая/_DWH/_Facts_by_periods/Stock/{name_table}.csv', header=None, skiprows=[0], sep=';', dtype=str)
-    elif name_table == 'fact_accum_division_of_seasons_by_tt_weekly':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Facts_by_seasons/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Facts_by_seasons/{name_table}.csv', header=None, skiprows=[0],
-                                    sep=';', dtype=str)
 
     if isinstance(load_data, pd.DataFrame):
         val = prepare_load_data(load_data)
@@ -187,8 +183,6 @@ def load_data_to_dwh(conn, name_table, method, load_data=None):
         if method == 'REP':
             sql = f'REPLACE INTO {name_table} ({str_header}) VALUES ({str_variables})'
         elif method == 'SEL-REP':
-            # sql = f'SELECT {str_header} FROM {name_table}'
-            # res = executemany_query(conn, sql)
             pass
             sql = f'REPLACE INTO {name_table} ({str_header}) VALUES ({str_variables})'
         elif method == 'INS':
@@ -221,9 +215,9 @@ if connection:
         # ['dim_products', 'REP'], # - продумать обновление без ошибок разделителя csv
         # ['dim_subdivisions', 'REP'], # - продумать обновление без замены изменений (в т.ч. связей relat)
         # ['dim_warehouses', 'REP'], # - продумать обновление без замены изменений
+        ['rep_control_retail_transfer_orders', 'DEL-INS'],
         ['rep_le_silla_sales_from_movement', 'DEL-INS'],
         ['fact_retail_stock_by_days_weekly', 'DEL-INS'],
-        ['fact_accum_division_of_seasons_by_tt_weekly', 'INS']
     ]
     for twin in names_table:
         if twin[1] != 'skip':
