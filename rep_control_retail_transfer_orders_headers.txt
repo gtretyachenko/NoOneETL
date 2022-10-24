@@ -1,0 +1,15 @@
+Date
+DateDocument
+OrderDocument
+TypeTransfer
+WhID
+WhIDRecipient
+GrID
+EndOfIncoming
+DurationTransferDays
+CancelFlag
+QuantityToTransfer
+QuantityReady
+QuantityTransfered
+DaysPassed
+CommentDocument
