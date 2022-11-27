@@ -1,0 +1,11 @@
+Date
+TypeFact
+GenderCapacity
+TypeCapacity
+Seasonality
+CargoDimantions
+CodeMart
+GroupCapacity
+SdID
+MinSKU
+MaxSKU
