@@ -5,6 +5,7 @@ TypeTransfer
 WhID
 WhIDRecipient
 GrID
+Characteristic
 EndOfIncoming
 DurationTransferDays
 CancelFlag
@@ -13,3 +14,4 @@ QuantityReady
 QuantityTransfered
 DaysPassed
 CommentDocument
+QuantityStock

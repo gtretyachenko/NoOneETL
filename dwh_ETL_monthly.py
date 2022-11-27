@@ -132,6 +132,9 @@ def prepare_load_data(data):
         item_data = list()
         for value in values:
             if isinstance(value, str):
+                if len(value) == 10 and len(value.replace('.','')) == 8:
+                    value = datetime.strptime(value, '%d.%m.%Y')
+                    value = value.strftime('%Y-%m-%d')
                 temp_val = value.replace(' 0:00:00', '').replace(' 0:00', '')
                 if temp_val != value and len(temp_val) == 10:
                     value = datetime.strptime(temp_val, '%d.%m.%Y')
@@ -178,6 +181,13 @@ def load_data_to_dwh(conn, name_table, method, load_data=None):
     elif name_table == 'relat_subdivisions_lfl':
         if os.path.getmtime(f'C:/Общая/_DWH/_Relations/{name_table}.csv') > dt_start_day:
             load_data = pd.read_csv(f'C:/Общая/_DWH/_Relations/{name_table}.csv', header=None, skiprows=[0], sep=';', dtype=str)
+    elif name_table == 'fact_shopping_rooms_capacity':
+        if os.path.getmtime(f'C:/Общая/_DWH/_Facts_other/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'C:/Общая/_DWH/_Facts_other/{name_table}.csv', header=None, skiprows=[0], sep=';', dtype=str)
+    elif name_table == 'fact_shops_storege_capacity':
+        if os.path.getmtime(f'C:/Общая/_DWH/_Facts_other/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'C:/Общая/_DWH/_Facts_other/{name_table}.csv', header=None, skiprows=[0], sep=';', dtype=str)
+
 
     if isinstance(load_data, pd.DataFrame):
         val = prepare_load_data(load_data)
@@ -217,7 +227,9 @@ if connection:
     str_tables = ''
     names_table = [
         ['fact_sales_plan_monthly', 'INS'],
-        # ['relat_subdivisions_lfl', 'INS'] # - для ручной загрузки
+        # ['relat_subdivisions_lfl', 'DEL-INS'] # - для ручной загрузки
+        # ['fact_shopping_rooms_capacity', 'DEL-INS'], # - для ручной загрузки
+        # ['fact_shops_storege_capacity', 'DEL-INS'] # - для ручной загрузки
     ]
     for twin in names_table:
         if twin[1] != 'skip':

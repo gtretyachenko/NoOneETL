@@ -133,31 +133,62 @@ def prepare_attr_table(temp_txt):
 def prepare_load_data(data, table_name):
     new_data = list()
     data = data.replace(np.NAN, None)
-    for values in data.values:
+    for i_row, values in enumerate(data.values):
+        # Перебрать строки в таблице c заполнением нового столбца
         item_data = list()
-        for value in values:
+        for i_col, value in enumerate(values):
+            # Перебрать столбцы в строке
             if isinstance(value, str):
+                # Если текст
                 temp_val = value.replace(' 0:00:00', '').replace(' 0:00', '')
                 if temp_val != value and len(temp_val) == 10:
+                    # Формат ДатаВремя 1С распознан и сконвертирован
                     value = datetime.strptime(temp_val, '%d.%m.%Y')
                     value = value.strftime('%Y-%m-%d')
-                temp_val = value.replace(',', '').replace(chr(160), '').replace(chr(32), '').replace('-', '')
+                else:
+                    # Это любой текст или пустота
+                    temp_val = value.replace('.', '').replace(',', '').replace(chr(160), '').replace(chr(32), '')
                 if temp_val.isnumeric():
-                    value = value.replace(',', '.')
-                    value = value.replace(chr(160), '')
-                    value = value.replace(chr(32), '')
-                temp_val = value.replace(chr(160), '')
-                if temp_val.isnumeric():
-                    value = value.replace(chr(160), '')
-                temp_val = value.replace(chr(32), '')
-                if temp_val.isnumeric():
-                    value = value.replace(chr(32), '')
-            if type(value) is float:
-                value = int(value)
+                    if value.replace(',', '.').replace(chr(160), '').replace(chr(32), '') != temp_val:
+                        # Если только числа и была запятая, то конвертируем во float
+                        value = float(value.replace(',', '.').replace(chr(160), '').replace(chr(32), ''))
+
+            ### Выполнить если значение текст (строка)
+            if table_name == 'fact_sales_extendet_dealy_temp':
+                ### Выполнить если работаем с таблицой расширеных продаж
+                if i_col == 25 and isinstance(value, str):
+                        value = value.replace(chr(160), '').replace(chr(32), '')
+                if i_col == 26 and data[26].values[i_row] and isinstance(value, str):
+                    value = value[:value.find(' ')]
+                    if len(value) == 8:
+                        value = value[2:]
+                if i_col == 27 and isinstance(value, str):
+                    temp_val = value.replace('Клиент, код карты: ', '').replace(chr(160), '').replace(chr(32), '')
+                    if value != temp_val and temp_val.isnumeric() and len(temp_val) == 6:
+                        data[25].values[i_row] = temp_val
+                        data[27].values[i_row] = 'Розничный покупатель'
+
             if not value:
-                item_data.append(value)
+                ### Если Пусто
+                item_data.append('None')
             else:
-                item_data.append(str(value))
+                if type(value) is float:
+                    ###  когда тип с плавающей точкой (flot)
+                    value = round(value, 3)
+                    value = str(value).replace('.', ',')
+                ### Если Любое
+                item_data.append(str(value).replace('nan', 'None'))
+        if table_name == 'fact_sales_extendet_dealy_temp':
+            ### выполнить если таблица расширеных продаж
+            item_data.append('None')
+            if item_data[25] != 'None':
+                code = str(item_data[25]).replace(chr(160), '').replace(chr(32), '').replace('БК', '')
+                if code.isnumeric() and len(code) == 6:
+                    # Код БК vВАЛИДНЫЙv
+                    item_data[28] = 'True'
+                else:
+                    # Код БК хНЕ ВАЛИДНЫЙх
+                    item_data[28] = 'False'
         new_data.append(tuple(item_data))
     return new_data
 
@@ -248,19 +279,19 @@ msg_txt = ''
 if connection:
     str_tables = ''
     names_table = [
-       ['info_current_price', 'DEL-INS'],
-       ['fact_sales_extendet_dealy', 'INS'],
-       ['rep_orders_ecom_at_work', 'DEL-INS'],
-       ['rep_control_shopping_rooms', 'DEL-INS'],
-       ['rep_control_down_stores', 'DEL-INS'],
-       ['fact_current_addition_retail_stock_extendet', 'DEL-INS'],
-       ['fact_current_stock_extendet', 'DEL-INS'],
-       ['info_current_season_products', 'DEL-INS'],
-       ['fact_current_accum_by_seasons', 'DEL-INS'],
-       ['rep_waiting_goods_arrival_warehouse1', 'DEL-INS'],
-       ['fact_current_shepping_list_by_seasons', 'DEL-INS'],
-       ['fact_current_accum_division_of_seasons_by_tt', 'DEL-INS']
-       #  ['fact_sales_extendet_dealy_temp', 'DEL-INS'],
+       # ['info_current_price', 'DEL-INS'],
+       # ['fact_sales_extendet_dealy', 'INS'],
+       # ['rep_orders_ecom_at_work', 'DEL-INS'],
+       # ['rep_control_shopping_rooms', 'DEL-INS'],
+       # ['rep_control_down_stores', 'DEL-INS'],
+       # ['fact_current_addition_retail_stock_extendet', 'DEL-INS'],
+       # ['fact_current_stock_extendet', 'DEL-INS'],
+       # ['info_current_season_products', 'DEL-INS'],
+       # ['fact_current_accum_by_seasons', 'DEL-INS'],
+       # ['rep_waiting_goods_arrival_warehouse1', 'DEL-INS'],
+       # ['fact_current_shepping_list_by_seasons', 'DEL-INS'],
+       # ['fact_current_accum_division_of_seasons_by_tt', 'DEL-INS']
+        ['fact_sales_extendet_dealy_temp', 'DEL-INS'],
     ]
     for twin in names_table:
         if twin[1] != 'skip':

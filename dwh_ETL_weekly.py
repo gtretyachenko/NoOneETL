@@ -140,7 +140,6 @@ def prepare_load_data(data):
                 temp_val = value.replace(',', '').replace(chr(160), '').replace(chr(32), '').replace('-', '')
                 if temp_val.isnumeric():
                     value = value.replace(',', '.')
-                    # value = value.replace('-', '')
                     value = value.replace(chr(160), '')
                     value = value.replace(chr(32), '')
                 temp_val = value.replace(chr(160), '')
@@ -216,7 +215,7 @@ if connection:
         # ['dim_subdivisions', 'REP'], # - продумать обновление без замены изменений (в т.ч. связей relat)
         # ['dim_warehouses', 'REP'], # - продумать обновление без замены изменений
         ['rep_control_retail_transfer_orders', 'DEL-INS'],
-        ['rep_le_silla_sales_from_movement', 'DEL-INS'],
+        # ['rep_le_silla_sales_from_movement', 'DEL-INS'], - отчет отменен
         ['fact_retail_stock_by_days_weekly', 'DEL-INS'],
     ]
     for twin in names_table:
