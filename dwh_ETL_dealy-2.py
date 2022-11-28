@@ -18,6 +18,26 @@ from pymysql import Error
 import pandas as pd
 import numpy as np
 
+# notebook_runner.py
+import nbformat
+from nbconvert.preprocessors import ExecutePreprocessor
+
+
+def run_notebook(notebook_path):
+    nb_name, _ = os.path.splitext(os.path.basename(notebook_path))
+    dirname = os.path.dirname(notebook_path)
+
+    with open(notebook_path) as f:
+        nb = nbformat.read(f, as_version=4)
+
+    proc = ExecutePreprocessor(timeout=600, kernel_name='python3')
+    proc.allow_errors = True
+
+    proc.preprocess(nb, {'metadata': {'path': '/'}})
+    output_path = os.path.join(dirname, '{}_all_output.ipynb'.format(nb_name))
+
+    with open(output_path, mode='wt') as f:
+        nbformat.write(nb, f)
 
 
 def send_email(subject, to_addr, msg_txt, cfg, data_frame=None):
@@ -270,10 +290,12 @@ def load_data_to_dwh(conn, name_table, method, load_data=None):
             df.replace(to_replace=[None], value=np.nan, inplace=True)
             arr = np.array(df)
             arr_headers = np.array(str_header.split(','))
-            outfile = os.path.join(base_path, 'eda_df') # TemporaryFile()
-            outfile2 = os.path.join(base_path, 'headers(eda_df)')  # TemporaryFile()
+            outfile = os.path.join(base_path, 'eda_df')
+            outfile2 = os.path.join(base_path, 'headers(eda_df)')
             np.save(outfile, arr)
             np.save(outfile2, arr_headers)
+            # run_notebook('ETL_DATA_EDA.ipynb')
+            os.system('jupyter nbconvert --to webpdf --allow-chromium-download ETL_DATA_EDA.ipynb')
     return res
 
 
