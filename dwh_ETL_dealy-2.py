@@ -19,8 +19,8 @@ import pandas as pd
 import numpy as np
 
 
+
 def send_email(subject, to_addr, msg_txt, cfg, data_frame=None):
-    #
 
     host = cfg.get("smtp", "server")
     pas = cfg.get("smtp", "pass")
@@ -146,18 +146,23 @@ def prepare_load_data(data, table_name):
                     value = datetime.strptime(temp_val, '%d.%m.%Y')
                     value = value.strftime('%Y-%m-%d')
                 else:
-                    # Это любой текст или пустота
-                    temp_val = value.replace('.', '').replace(',', '').replace(chr(160), '').replace(chr(32), '')
+                    # Создаем текст (строку) в буфере
+                    temp_val = value.replace('.', '').replace(',', '').replace(chr(160), '').replace(chr(32), '').replace('-', '')
                 if temp_val.isnumeric():
-                    if value.replace(',', '.').replace(chr(160), '').replace(chr(32), '') != temp_val:
-                        # Если только числа и была запятая, то конвертируем во float
-                        value = float(value.replace(',', '.').replace(chr(160), '').replace(chr(32), ''))
+                    # Проверяем текст (строку) в буфере на цифры
+                    if value.replace(',', '.').replace(chr(160), '').replace(chr(32), '') != temp_val and not value.isnumeric():
+                        value = value.replace(',', '.').replace(chr(160), '').replace(chr(32), '')
+                        if (value[0] == '-' and value.replace('-', '') != temp_val) or value.replace('-', '') != temp_val:
+                            # Если только числа и была запятая, то конвертируем во float
+                            value = float(value.replace(',', '.').replace(chr(160), '').replace(chr(32), ''))
+                        else:
+                            value = value.replace(',', '.').replace(chr(160), '').replace(chr(32), '')
 
             ### Выполнить если значение текст (строка)
             if table_name == 'fact_sales_extendet_dealy_temp':
                 ### Выполнить если работаем с таблицой расширеных продаж
                 if i_col == 25 and isinstance(value, str):
-                        value = value.replace(chr(160), '').replace(chr(32), '')
+                        value = value.replace(chr(160), '').replace(chr(32), '').replace('БК', '').replace('', '')
                 if i_col == 26 and data[26].values[i_row] and isinstance(value, str):
                     value = value[:value.find(' ')]
                     if len(value) == 8:
@@ -170,18 +175,18 @@ def prepare_load_data(data, table_name):
 
             if not value:
                 ### Если Пусто
-                item_data.append('None')
+                item_data.append(None)
             else:
-                if type(value) is float:
+                if isinstance(value, float):
                     ###  когда тип с плавающей точкой (flot)
                     value = round(value, 3)
-                    value = str(value).replace('.', ',')
+                    value = str(value) # .replace('.', ',')
                 ### Если Любое
-                item_data.append(str(value).replace('nan', 'None'))
+                item_data.append(value)
         if table_name == 'fact_sales_extendet_dealy_temp':
             ### выполнить если таблица расширеных продаж
-            item_data.append('None')
-            if item_data[25] != 'None':
+            item_data.append(None)
+            if item_data[25] and isinstance(item_data[25], str):
                 code = str(item_data[25]).replace(chr(160), '').replace(chr(32), '').replace('БК', '')
                 if code.isnumeric() and len(code) == 6:
                     # Код БК vВАЛИДНЫЙv
@@ -196,9 +201,10 @@ def prepare_load_data(data, table_name):
 def load_data_to_dwh(conn, name_table, method, load_data=None):
     dt_start_day = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
     temp_txt = open(f'C:/Users/g.tretyachenko/PycharmProjects/NoOneETL/{name_table}_headers.txt', 'r')
+    # Получение заголовков столбцов таблицы
     str_header, str_variables = prepare_attr_table(temp_txt)
     res = ''
-
+    # Мапинг дирикторий файлов csv & table_name
     if name_table[:3] == 'rep':
         if os.path.getmtime(f'C:/Общая/_DWH/_Reports/{name_table}.csv') > dt_start_day:
             load_data = pd.read_csv(f'C:/Общая/_DWH/_Reports/{name_table}.csv', header=None, skiprows=[0], sep=';',
@@ -211,12 +217,12 @@ def load_data_to_dwh(conn, name_table, method, load_data=None):
         if os.path.getmtime(f'C:/Общая/_DWH/_Info/{name_table}.csv') > dt_start_day:
             load_data = pd.read_csv(f'C:/Общая/_DWH/_Info/{name_table}.csv', header=None, skiprows=[0], sep=';',
                                     dtype=str)
-    elif name_table[:4] == 'stat':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Stat/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Stat/{name_table}.csv', header=None, skiprows=[0], sep=';',
-                                    dtype=str)
+    # elif name_table[:4] == 'stat':
+    #     if os.path.getmtime(f'C:/Общая/_DWH/_Stat/{name_table}.csv') > dt_start_day:
+    #         load_data = pd.read_csv(f'C:/Общая/_DWH/_Stat/{name_table}.csv', header=None, skiprows=[0], sep=';',
+    #                                 dtype=str)
     elif name_table == 'fact_sales_extendet_dealy_temp':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Facts_by_periods/Sales/{name_table}.csv') > dt_start_day:
+        # if os.path.getmtime(f'C:/Общая/_DWH/_Facts_by_periods/Sales/{name_table}.csv') > dt_start_day:
             load_data = pd.read_csv(f'C:/Общая/_DWH/_Facts_by_periods/Sales/{name_table}.csv', header=None,
                                     skiprows=[0], sep=';', dtype=str)
     elif name_table == 'fact_sales_extendet_dealy':
@@ -245,7 +251,7 @@ def load_data_to_dwh(conn, name_table, method, load_data=None):
                                     sep=';', dtype=str)
 
     if isinstance(load_data, pd.DataFrame):
-        val = prepare_load_data(load_data, name_table)
+        val = prepare_load_data(load_data, name_table) # список картежей с
         sql = ''
         if method == 'REP':
             sql = f'REPLACE INTO {name_table} ({str_header}) VALUES ({str_variables})'
@@ -259,6 +265,15 @@ def load_data_to_dwh(conn, name_table, method, load_data=None):
             execute_read_query(conn, sql_0)
             sql = f'INSERT INTO {name_table} ({str_header}) VALUES ({str_variables});'
         res = executemany_query(conn, sql, val)
+        if res == 'Query executed successfully':
+            df = pd.DataFrame(val)
+            df.replace(to_replace=[None], value=np.nan, inplace=True)
+            arr = np.array(df)
+            arr_headers = np.array(str_header.split(','))
+            outfile = os.path.join(base_path, 'eda_df') # TemporaryFile()
+            outfile2 = os.path.join(base_path, 'headers(eda_df)')  # TemporaryFile()
+            np.save(outfile, arr)
+            np.save(outfile2, arr_headers)
     return res
 
 
