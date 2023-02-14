@@ -1,0 +1,11 @@
+Date
+GrID
+DateFirstInCome
+DateFirstInComeRetail
+DateFirstSales
+DateLastSales
+DepthInOrder
+DepthInStockRetail
+DepthInStockWh
+DepthInStockAll
+CountTTStockRetail

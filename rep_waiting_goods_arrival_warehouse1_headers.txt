@@ -1,0 +1,15 @@
+Date
+TypeFact
+TypeTransfer
+TypeStock
+CitySender
+DocumentTransfer
+DocumentStatus
+DateControl
+CountWaiting
+CountArrival
+GrID
+SdIDSender
+WhIDSender
+NumSheppingList
+IDSheppingList

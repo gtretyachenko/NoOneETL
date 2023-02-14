@@ -1,0 +1,11 @@
+GrID
+Photo
+Size
+Subdivisions
+Count
+AmountWithVAT
+SaleManager
+DocMovement
+WorkHouseSender
+DaysPassed
+DateSales

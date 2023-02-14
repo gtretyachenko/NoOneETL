@@ -1,0 +1,6 @@
+GoodsCategory
+PriceGroup
+PriceRubFrom
+PriceRubTo
+TypePriceGroupMain
+TypePriceGroupStock

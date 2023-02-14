@@ -1,0 +1,13 @@
+Date
+TypeFact
+GenderCapacity
+TypeCapacity
+Seasonality
+Length
+Width
+Height
+Units
+CodeMart
+GroupCapacity
+SdID
+MaxQuantity

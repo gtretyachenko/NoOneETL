@@ -1,0 +1,10 @@
+Date
+TransferDoc
+OrderDoc
+ConditionOrder
+ConditionDate
+Quantity
+GrID
+Size
+WhID
+SdID

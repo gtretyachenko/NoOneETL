@@ -1,0 +1,5 @@
+DateStart
+TypeFact
+DurationDays
+AmountRub
+SdID

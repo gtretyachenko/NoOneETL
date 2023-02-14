@@ -1,0 +1,6 @@
+KeyRelationSdiv
+ParentSdID
+SdID
+NameShort
+Sex
+TradeMark
