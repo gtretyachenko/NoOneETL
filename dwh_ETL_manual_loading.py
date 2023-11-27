@@ -4,7 +4,7 @@
 # Импорт системных библиотек
 import os
 import sys
-from datetime import datetime
+from datetime import timedelta, datetime, date
 # Импорт почтового сервера
 import smtplib
 # Импорт библиотек конструктора электронных писем
@@ -89,6 +89,7 @@ def create_connection(cfg):
 def executemany_query(connection, query, val):
     cursor = connection.cursor()
     try:
+        print('Processing....')
         cursor.executemany(query, val)
         connection.commit()
         res = "Query executed successfully"
@@ -102,6 +103,7 @@ def executemany_query(connection, query, val):
 def execute_query(connection, query):
     cursor = connection.cursor()
     try:
+        print('Processing....')
         cursor.execute(query)
         connection.commit()
         res = "Query executed successfully"
@@ -115,6 +117,7 @@ def execute_query(connection, query):
 def execute_read_query(connection, query):
     cursor = connection.cursor()
     try:
+        print('Processing....')
         cursor.execute(query)
         result = cursor.fetchall()
         return result
@@ -139,7 +142,7 @@ def prepare_load_data(data, table_name):
         for value in values:
             if isinstance(value, str):
                 temp_val = value.replace(' 0:00:00', '').replace(' 0:00', '')
-                if temp_val != value and len(temp_val) == 10:
+                if (temp_val != value and len(temp_val) == 10) or (len(temp_val) == 10 and value.replace('.', '').isnumeric()):
                     value = datetime.strptime(temp_val, '%d.%m.%Y')
                     value = value.strftime('%Y-%m-%d')
                 temp_val = value.replace(',', '').replace(chr(160), '').replace(chr(32), '').replace('-', '')
@@ -170,69 +173,89 @@ def load_data_to_dwh(conn, name_table, method, load_data=None):
     res = ''
 
     if name_table[:3] == 'rep':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Reports/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Reports/{name_table}.csv', header=None, skiprows=[0], sep=';',
+        if os.path.getmtime(f'//share1/DWH/_Reports/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Reports/{name_table}.csv', header=None, skiprows=[0], sep=';',
                                     dtype=str)
     elif name_table[:3] == 'dim':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Dimension/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Dimension/{name_table}.csv', header=None, skiprows=[0], sep=';',
+        if os.path.getmtime(f'//share1/DWH/_Dimension/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Dimension/{name_table}.csv', header=None, skiprows=[0], sep=';',
                                     dtype=str)
     elif name_table[:3] == 'inf':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Info/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Info/{name_table}.csv', header=None, skiprows=[0], sep=';',
+        if os.path.getmtime(f'//share1/DWH/_Info/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Info/{name_table}.csv', header=None, skiprows=[0], sep=';',
                                     dtype=str)
     elif name_table[:4] == 'stat':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Stat/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Stat/{name_table}.csv', header=None, skiprows=[0], sep=';',
+        if os.path.getmtime(f'//share1/DWH/_Stat/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Stat/{name_table}.csv', header=None, skiprows=[0], sep=';',
                                     dtype=str)
     elif name_table == 'fact_sales_extendet_dealy_temp':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Facts_by_periods/Sales/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Facts_by_periods/Sales/{name_table}.csv', header=None,
+        if os.path.getmtime(f'//share1/DWH/_Facts_by_periods/Sales/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Facts_by_periods/Sales/{name_table}.csv', header=None,
                                     skiprows=[0], sep=';', dtype=str)
     elif name_table == 'fact_sales_extendet_dealy':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Facts_by_periods/Sales/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Facts_by_periods/Sales/{name_table}.csv', header=None,
+        if os.path.getmtime(f'//share1/DWH/_Facts_by_periods/Sales/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Facts_by_periods/Sales/{name_table}.csv', header=None,
                                     skiprows=[0], sep=';', dtype=str)
     elif name_table == 'fact_current_stock_extendet':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Facts_by_periods/Stock/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Facts_by_periods/Stock/{name_table}.csv', header=None,
+        if os.path.getmtime(f'//share1/DWH/_Facts_by_periods/Stock/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Facts_by_periods/Stock/{name_table}.csv', header=None,
+                                    skiprows=[0], sep=';', dtype=str)
+    elif name_table == 'fact_current_goods_in_acceptance':
+        if os.path.getmtime(f'//share1/DWH/_Facts_by_periods/Stock/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Facts_by_periods/Stock/{name_table}.csv', header=None,
                                     skiprows=[0], sep=';', dtype=str)
     elif name_table == 'fact_current_accum_by_seasons':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Facts_by_seasons/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Facts_by_seasons/{name_table}.csv', header=None, skiprows=[0],
+        if os.path.getmtime(f'//share1/DWH/_Facts_by_seasons/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Facts_by_seasons/{name_table}.csv', header=None, skiprows=[0],
                                     sep=';', dtype=str)
     elif name_table == 'fact_current_addition_retail_stock_extendet':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Facts_by_periods/Stock/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Facts_by_periods/Stock/{name_table}.csv', header=None,
+        if os.path.getmtime(f'//share1/DWH/_Facts_by_periods/Stock/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Facts_by_periods/Stock/{name_table}.csv', header=None,
+                                    skiprows=[0], sep=';', dtype=str)
+    elif name_table == 'fact_current_stock_by_size':
+        if os.path.getmtime(f'//share1/DWH/_Facts_by_periods/Stock/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Facts_by_periods/Stock/{name_table}.csv', header=None,
                                     skiprows=[0], sep=';', dtype=str)
     elif name_table == 'fact_current_shepping_list_by_seasons':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Facts_by_seasons/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Facts_by_seasons/{name_table}.csv', header=None, skiprows=[0],
+        if os.path.getmtime(f'//share1/DWH/_Facts_by_seasons/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Facts_by_seasons/{name_table}.csv', header=None, skiprows=[0],
                                     sep=';', dtype=str)
     elif name_table == 'fact_current_accum_division_of_seasons_by_tt':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Facts_by_seasons/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Facts_by_seasons/{name_table}.csv', header=None, skiprows=[0],
+        if os.path.getmtime(f'//share1/DWH/_Facts_by_seasons/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Facts_by_seasons/{name_table}.csv', header=None, skiprows=[0],
                                     sep=';', dtype=str)
     elif name_table == 'fact_retail_stock_by_days_weekly':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Facts_by_periods/Stock/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Facts_by_periods/Stock/{name_table}.csv', header=None,
+        if os.path.getmtime(f'//share1/DWH/_Facts_by_periods/Stock/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Facts_by_periods/Stock/{name_table}.csv', header=None,
                                     skiprows=[0], sep=';', dtype=str)
     elif name_table == 'fact_sales_plan_monthly':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Facts_by_periods/SalesPlan/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Facts_by_periods/SalesPlan/{name_table}.csv', header=None,
+        if os.path.getmtime(f'//share1/DWH/_Facts_by_periods/SalesPlan/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Facts_by_periods/SalesPlan/{name_table}.csv', header=None,
                                     skiprows=[0], sep=';', dtype=str)
     elif name_table == 'relat_subdivisions_lfl':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Relations/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Relations/{name_table}.csv', header=None, skiprows=[0],
+        if os.path.getmtime(f'//share1/DWH/_Relations/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Relations/{name_table}.csv', header=None, skiprows=[0],
                                     sep=';', dtype=str)
     elif name_table == 'fact_shopping_rooms_capacity':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Facts_other/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Facts_other/{name_table}.csv', header=None, skiprows=[0],
+        if os.path.getmtime(f'//share1/DWH/_Facts_other/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Facts_other/{name_table}.csv', header=None, skiprows=[0],
                                     sep=';', dtype=str)
     elif name_table == 'fact_shops_storege_capacity':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Facts_other/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Facts_other/{name_table}.csv', header=None, skiprows=[0],
+        if os.path.getmtime(f'//share1/DWH/_Facts_other/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Facts_other/{name_table}.csv', header=None, skiprows=[0],
                                     sep=';', dtype=str)
+    elif name_table == 'fact_traffic_shopping_centers':
+        if os.path.getmtime(f'//share1/DWH/_Facts_by_periods/TrafficShops/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Facts_by_periods/TrafficShops/{name_table}.csv', header=None,
+                                    skiprows=[0], sep=';', dtype=str)
+    elif name_table == 'fact_weather_from_visual_crossing_com':
+        if os.path.getmtime(f'//share1/DWH/_Facts_by_periods/WeatherVisualCrossingCom/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Facts_by_periods/WeatherVisualCrossingCom/{name_table}.csv', header=None,
+                                    skiprows=[0], sep=';', dtype=str)
+    elif name_table == 'inval_current_retail_product_list':
+        if os.path.getmtime(f'//share1/DWH/_InVal/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_InVal/{name_table}.csv', header=None,
+                                    skiprows=[0], sep=';', dtype=str)
 
     if isinstance(load_data, pd.DataFrame):
         val = prepare_load_data(load_data, name_table)
@@ -240,7 +263,6 @@ def load_data_to_dwh(conn, name_table, method, load_data=None):
         if method == 'REP':
             sql = f'REPLACE INTO {name_table} ({str_header}) VALUES ({str_variables})'
         elif method == 'SEL-REP':
-            # sql = f'REPLACE INTO {name_table} ({str_header}) VALUES ({str_variables})'
             pass
         elif method == 'INS':
             sql = f'INSERT INTO {name_table} ({str_header}) VALUES ({str_variables})'
@@ -248,6 +270,14 @@ def load_data_to_dwh(conn, name_table, method, load_data=None):
             sql_0 = f'TRUNCATE TABLE {name_table}'
             execute_read_query(conn, sql_0)
             sql = f'INSERT INTO {name_table} ({str_header}) VALUES ({str_variables});'
+        elif method == 'DEL45-INS':
+            date_to_del = date.today() - timedelta(45)
+            sql_0 = f'DELETE FROM {name_table} WHERE Date >="{date_to_del}"'
+            execute_read_query(conn, sql_0)
+            sql = f'INSERT INTO {name_table} ({str_header}) VALUES ({str_variables});'
+        elif method == 'INS-UPD':
+            twin_head_val = ','.join([h + '=VALUES(' + h + ')' for h in str_header.split(',')])
+            sql = f'INSERT INTO {name_table} ({str_header}) VALUES ({str_variables}) ON DUPLICATE KEY UPDATE {twin_head_val}'
         res = executemany_query(conn, sql, val)
     return res
 
@@ -271,7 +301,7 @@ if connection:
     names_table = [
        # ---------ежедневные обмены------------
        # ['info_current_price', 'DEL-INS'],
-       # ['fact_sales_extendet_dealy', 'INS'],
+       # ['fact_sales_extendet_dealy', 'DEL45-INS'],
        # ['rep_orders_ecom_at_work', 'DEL-INS'],
        # ['rep_control_shopping_rooms', 'DEL-INS'],
        # ['rep_control_down_stores', 'DEL-INS'],
@@ -282,13 +312,18 @@ if connection:
        # ['rep_waiting_goods_arrival_warehouse1', 'DEL-INS'],
        # ['fact_current_shepping_list_by_seasons', 'DEL-INS'],
        # ['fact_current_accum_division_of_seasons_by_tt', 'DEL-INS'],
+       # ['fact_current_stock_by_size', 'DEL-INS'],
+       # ['fact_current_goods_in_acceptance', 'DEL-INS'],
+       # ['fact_traffic_shopping_centers', 'DEL45-INS'],
+       # ['fact_weather_from_visual_crossing_com', 'DEL-INS'],
        # ---------еженедельные обмены-------------
-       # ['dim_products', 'REP'],
-       # ['dim_subdivisions', 'REP'], # - продумать обновление без замены изменений (в т.ч. связей relat)
-       # ['dim_warehouses', 'REP'], # - продумать обновление без замены изменений
+       # ['dim_products', 'INS-UPD'],
+       # ['dim_subdivisions', 'INS-UPD'],
+       # ['dim_warehouses', 'INS-UPD'],
        # ['rep_control_retail_transfer_orders', 'DEL-INS'],
        # ['rep_control_stock_cmv', 'DEL-INS'],
        # ['fact_retail_stock_by_days_weekly', 'DEL-INS'],
+       # ['inval_current_retail_product_list', 'DEL-INS'],
        # -------------ежемесячные + по случаю обмены------------
        # ['fact_sales_plan_monthly', 'INS'],
        # ['dim_price_group', 'DEL-INS'],
@@ -309,7 +344,16 @@ if connection:
             COUNT(tbl1.Date) AS "Кол-во строк",
             COUNT(DISTINCT(tbl1.Date)) as "Кол-во срезов дат"
         FROM fact_sales_extendet_dealy as tbl1
-        GROUP BY "fact_sales_extendet_dealy"
+        GROUP BY "fact_sales_extendet_dealy"        
+        UNION ALL
+                
+        SELECT 
+            "fact_traffic_shopping_centers",
+            MAX(tbl8.Date),
+            COUNT(tbl8.Date),
+            COUNT(DISTINCT(tbl8.Date))
+        FROM fact_traffic_shopping_centers as tbl8
+        GROUP BY "fact_traffic_shopping_centers"     
         UNION ALL
        
        SELECT 
@@ -354,7 +398,16 @@ if connection:
             COUNT(tbl6.Date),
             COUNT(DISTINCT(tbl6.Date))
         FROM fact_current_accum_division_of_seasons_by_tt as tbl6
-        GROUP BY "fact_current_accum_division_of_seasons_by_tt"
+        GROUP BY "fact_current_accum_division_of_seasons_by_tt"        
+        UNION ALL
+                
+        SELECT 
+            "fact_current_goods_in_acceptance",
+            MAX(tbl7.Date),
+            COUNT(tbl7.Date),
+            COUNT(DISTINCT(tbl7.Date))
+        FROM fact_current_goods_in_acceptance as tbl7
+        GROUP BY "fact_current_goods_in_acceptance"      
         '''
     info_update = execute_read_query(connection, sql)
 

@@ -1,0 +1,17 @@
+Date
+TypeFact
+NumDocument
+DateDocument
+Document
+DateStatus
+Status
+Quantity
+SubTypeFact
+SheppmentID
+ShortDocumentContent
+FoundationDocument
+GrID
+SdID
+WhID
+SenderSdID
+SenderWhID

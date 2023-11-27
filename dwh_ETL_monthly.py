@@ -9,7 +9,7 @@ from pymysql import Error
 import smtplib
 import email.message
 from configparser import ConfigParser
-from datetime import datetime
+from datetime import timedelta, datetime, date
 
 
 def send_email(subject, to_addr, msg_txt, cfg, data_frame=None):
@@ -125,24 +125,20 @@ def prepare_attr_table(temp_txt):
     return headers, variables[:-1]
 
 
-def prepare_load_data(data):
+def prepare_load_data(data, table_name):
     new_data = list()
     data = data.replace(np.NAN, None)
     for values in data.values:
         item_data = list()
         for value in values:
             if isinstance(value, str):
-                if len(value) == 10 and len(value.replace('.','')) == 8:
-                    value = datetime.strptime(value, '%d.%m.%Y')
-                    value = value.strftime('%Y-%m-%d')
                 temp_val = value.replace(' 0:00:00', '').replace(' 0:00', '')
-                if temp_val != value and len(temp_val) == 10:
+                if (temp_val != value and len(temp_val) == 10): # or (len(temp_val) == 10 and value.replace('.', '').isnumeric()):
                     value = datetime.strptime(temp_val, '%d.%m.%Y')
                     value = value.strftime('%Y-%m-%d')
                 temp_val = value.replace(',', '').replace(chr(160), '').replace(chr(32), '').replace('-', '')
                 if temp_val.isnumeric():
                     value = value.replace(',', '.')
-                    # value = value.replace('-', '')
                     value = value.replace(chr(160), '')
                     value = value.replace(chr(32), '')
                 temp_val = value.replace(chr(160), '')
@@ -167,39 +163,44 @@ def load_data_to_dwh(conn, name_table, method, load_data=None):
     str_header, str_variables = prepare_attr_table(temp_txt)
     res = ''
     if name_table[:3] == 'rep':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Reports/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Reports/{name_table}.csv', header=None, skiprows=[0],
+        if os.path.getmtime(f'//share1/DWH/_Reports/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Reports/{name_table}.csv', header=None, skiprows=[0],
                                     sep=r'\|\|\|', engine='python', dtype=str)
     elif name_table[:3] == 'dim':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Dimension/{name_table}.csv') > (dt_start_day - 86400):
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Dimension/{name_table}.csv', header=None, skiprows=[0],
+        if os.path.getmtime(f'//share1/DWH/_Dimension/{name_table}.csv') > (dt_start_day - 86400):
+            load_data = pd.read_csv(f'//share1/DWH/_Dimension/{name_table}.csv', header=None, skiprows=[0],
                                     sep=r'\|\|\|', engine='python', dtype=str)
     elif name_table[:3] == 'inf':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Info/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Info/{name_table}.csv', header=None, skiprows=[0], sep=r'\|\|\|',
+        if os.path.getmtime(f'//share1/DWH/_Info/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Info/{name_table}.csv', header=None, skiprows=[0], sep=r'\|\|\|',
                                     engine='python', dtype=str)
     elif name_table == 'fact_sales_plan_monthly':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Facts_by_periods/SalesPlan/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Facts_by_periods/SalesPlan/{name_table}.csv', header=None,
+        if os.path.getmtime(f'//share1/DWH/_Facts_by_periods/SalesPlan/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Facts_by_periods/SalesPlan/{name_table}.csv', header=None,
                                     skiprows=[0], sep=r'\|\|\|', engine='python', dtype=str)
 
 
     if isinstance(load_data, pd.DataFrame):
-        val = prepare_load_data(load_data)
+        val = prepare_load_data(load_data, name_table)
         sql = ''
         if method == 'REP':
             sql = f'REPLACE INTO {name_table} ({str_header}) VALUES ({str_variables})'
         elif method == 'SEL-REP':
-            # sql_0 = f''
-            # sql = f'REPLACE INTO {name_table} ({str_header}) VALUES ({str_variables})'
             pass
-
         elif method == 'INS':
             sql = f'INSERT INTO {name_table} ({str_header}) VALUES ({str_variables})'
         elif method == 'DEL-INS':
             sql_0 = f'TRUNCATE TABLE {name_table}'
             execute_read_query(conn, sql_0)
             sql = f'INSERT INTO {name_table} ({str_header}) VALUES ({str_variables});'
+        elif method == 'DEL45-INS':
+            date_to_del = date.today() - timedelta(45)
+            sql_0 = f'DELETE FROM {name_table} WHERE Date >="{date_to_del}"'
+            execute_read_query(conn, sql_0)
+            sql = f'INSERT INTO {name_table} ({str_header}) VALUES ({str_variables});'
+        elif method == 'INS-UPD':
+            twin_head_val = ','.join([h + '=VALUES(' + h + ')' for h in str_header.split(',')])
+            sql = f'INSERT INTO {name_table} ({str_header}) VALUES ({str_variables}) ON DUPLICATE KEY UPDATE {twin_head_val}'
         res = executemany_query(conn, sql, val)
     return res
 

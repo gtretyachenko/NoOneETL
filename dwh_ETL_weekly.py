@@ -1,16 +1,22 @@
 # !/usr/bin/python3
 # -*- coding: utf-8 -*-
-import sys
+
+# Импорт системных библиотек
 import os
-import pandas as pd
-import numpy as np
+import sys
+from datetime import timedelta, datetime, date
+# Импорт почтового сервера
+import smtplib
+# Импорт библиотек конструктора электронных писем
+import email.message
+# Импорт билбиотеки для чтения ini конфигов
+from configparser import ConfigParser
+# Ипорт библиотек подключения к mysql серверу
 import pymysql
 from pymysql import Error
-import smtplib
-import email.message
-from configparser import ConfigParser
-from datetime import datetime
-
+# Ипорт аналитических библиотек
+import pandas as pd
+import numpy as np
 
 
 def send_email(subject, to_addr, msg_txt, cfg, data_frame=None):
@@ -126,7 +132,7 @@ def prepare_attr_table(temp_txt):
     return headers, variables[:-1]
 
 
-def prepare_load_data(data):
+def prepare_load_data(data, table_name):
     new_data = list()
     data = data.replace(np.NAN, None)
     for values in data.values:
@@ -134,7 +140,7 @@ def prepare_load_data(data):
         for value in values:
             if isinstance(value, str):
                 temp_val = value.replace(' 0:00:00', '').replace(' 0:00', '')
-                if temp_val != value and len(temp_val) == 10:
+                if (temp_val != value and len(temp_val) == 10): # or (len(temp_val) == 10 and value.replace('.', '').isnumeric()):
                     value = datetime.strptime(temp_val, '%d.%m.%Y')
                     value = value.strftime('%Y-%m-%d')
                 temp_val = value.replace(',', '').replace(chr(160), '').replace(chr(32), '').replace('-', '')
@@ -164,36 +170,57 @@ def load_data_to_dwh(conn, name_table, method, load_data=None):
     str_header, str_variables = prepare_attr_table(temp_txt)
     res = ''
     if name_table[:3] == 'rep':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Reports/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Reports/{name_table}.csv', header=None, skiprows=[0],
+        if os.path.getmtime(f'//share1/DWH/_Reports/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Reports/{name_table}.csv', header=None, skiprows=[0],
                                     sep=r'\|\|\|', engine='python', dtype=str)
     elif name_table[:3] == 'dim':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Dimension/{name_table}.csv') > (dt_start_day - 86400):
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Dimension/{name_table}.csv', header=None, skiprows=[0],
+        if os.path.getmtime(f'//share1/DWH/_Dimension/{name_table}.csv') > (dt_start_day - 86400):
+            if name_table == 'dim_products':
+                with open(f'//share1/DWH/_Dimension/{name_table}.csv', 'r+', encoding="utf-8", newline=None) as f:
+                    income_csv_txt = f.read()
+                    parts_txt = income_csv_txt.split('|||')
+                    for i, t in enumerate(parts_txt[154::80]):
+                        parts_txt[154 + (80 * i)] = t.replace('\n', ' ')
+                    valid_csv_txt = '|||'.join(parts_txt)
+                    f.seek(0)
+                    f.write(valid_csv_txt)
+                    f.truncate()
+            load_data = pd.read_csv(f'//share1/DWH/_Dimension/{name_table}.csv', header=None, skiprows=[0],
                                     sep=r'\|\|\|', engine='python', dtype=str)
     elif name_table[:3] == 'inf':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Info/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Info/{name_table}.csv', header=None, skiprows=[0],
+        if os.path.getmtime(f'//share1/DWH/_Info/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Info/{name_table}.csv', header=None, skiprows=[0],
                                     sep=r'\|\|\|', engine='python', dtype=str)
     elif name_table == 'fact_retail_stock_by_days_weekly':
-        if os.path.getmtime(f'C:/Общая/_DWH/_Facts_by_periods/Stock/{name_table}.csv') > dt_start_day:
-            load_data = pd.read_csv(f'C:/Общая/_DWH/_Facts_by_periods/Stock/{name_table}.csv', header=None,
+        if os.path.getmtime(f'//share1/DWH/_Facts_by_periods/Stock/{name_table}.csv') > dt_start_day:
+            load_data = pd.read_csv(f'//share1/DWH/_Facts_by_periods/Stock/{name_table}.csv', header=None,
+                                    skiprows=[0], sep=r'\|\|\|', engine='python', dtype=str)
+    elif name_table == 'inval_current_retail_product_list':
+        if os.path.getmtime(f'//share1/DWH/_InVal/{name_table}.csv') > (dt_start_day - 86400):
+            load_data = pd.read_csv(f'//share1/DWH/_InVal/{name_table}.csv', header=None,
                                     skiprows=[0], sep=r'\|\|\|', engine='python', dtype=str)
 
     if isinstance(load_data, pd.DataFrame):
-        val = prepare_load_data(load_data)
+        val = prepare_load_data(load_data, name_table)
         sql = ''
         if method == 'REP':
             sql = f'REPLACE INTO {name_table} ({str_header}) VALUES ({str_variables})'
         elif method == 'SEL-REP':
             pass
-            sql = f'REPLACE INTO {name_table} ({str_header}) VALUES ({str_variables})'
         elif method == 'INS':
             sql = f'INSERT INTO {name_table} ({str_header}) VALUES ({str_variables})'
         elif method == 'DEL-INS':
             sql_0 = f'TRUNCATE TABLE {name_table}'
             execute_read_query(conn, sql_0)
             sql = f'INSERT INTO {name_table} ({str_header}) VALUES ({str_variables});'
+        elif method == 'DEL45-INS':
+            date_to_del = date.today() - timedelta(45)
+            sql_0 = f'DELETE FROM {name_table} WHERE Date >="{date_to_del}"'
+            execute_read_query(conn, sql_0)
+            sql = f'INSERT INTO {name_table} ({str_header}) VALUES ({str_variables});'
+        elif method == 'INS-UPD':
+            twin_head_val = ','.join([h + '=VALUES(' + h + ')' for h in str_header.split(',')])
+            sql = f'INSERT INTO {name_table} ({str_header}) VALUES ({str_variables}) ON DUPLICATE KEY UPDATE {twin_head_val}'
         res = executemany_query(conn, sql, val)
     return res
 
@@ -215,12 +242,12 @@ msg_txt = ''
 if connection:
     str_tables = ''
     names_table = [
-        ['dim_products', 'REP'],
-        # ['dim_subdivisions', 'REP'], # - продумать обновление без замены изменений (в т.ч. связей relat)
-        # ['dim_warehouses', 'REP'], # - продумать обновление без замены изменений
-        ['rep_control_retail_transfer_orders', 'DEL-INS'],
+        # ['dim_products', 'INS-UPD'],
+        ['dim_subdivisions', 'INS-UPD'],
+        ['dim_warehouses', 'INS-UPD'],
         ['rep_control_stock_cmv', 'DEL-INS'],
         ['fact_retail_stock_by_days_weekly', 'DEL-INS'],
+        ['inval_current_retail_product_list', 'DEL-INS'],
     ]
     for twin in names_table:
         if twin[1] != 'skip':

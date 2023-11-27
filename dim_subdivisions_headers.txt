@@ -16,3 +16,5 @@ NotPlaning
 CloseDate
 _ID
 TypeProject
+SubDivParentID
+SubDivSex
